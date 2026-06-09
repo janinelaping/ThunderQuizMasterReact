@@ -1,9 +1,18 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import questions from "./data/questions";
 const pool = ["Janine", "Dennis", "Mandy", "Adrian"];
 const getRandomIndex = () => Math.floor(Math.random() * questions.length);
 export default function App() {
+	const coinSound = useRef(new Audio(`${import.meta.env.BASE_URL}coin.mp3`));
+	const failSound = useRef(new Audio(`${import.meta.env.BASE_URL}fail.mp3`));
+	const revealSound = useRef(
+		new Audio(`${import.meta.env.BASE_URL}reveal.mp3`),
+	);
+	const victorySound = useRef(
+		new Audio(`${import.meta.env.BASE_URL}victory.mp3`),
+	);
+
 	const [started, setStarted] = useState(false);
 	const [players, setPlayers] = useState([]);
 	const [scores, setScores] = useState({});
@@ -50,6 +59,24 @@ export default function App() {
 		setI((v) => v + 1);
 		setQuestionNumber((v) => v + 1);
 	};
+
+	useEffect(() => {
+		if (!gameEnded) return;
+
+		const highestScore = Math.max(...Object.values(scores));
+
+		const tiedPlayers = Object.values(scores).filter(
+			(score) => score === highestScore,
+		);
+
+		const isTie = highestScore > 0 && tiedPlayers.length > 1;
+
+		if (highestScore > 0 && !isTie) {
+			victorySound.current.currentTime = 0;
+			victorySound.current.play();
+		}
+	}, [gameEnded]);
+	
 	if (!started)
 		return (
 			<div className="screen">
@@ -289,7 +316,16 @@ export default function App() {
 			<h2>QUESTION {questionNumber}</h2>
 			<div className="q">{q.question}</div>
 			{!reveal ? (
-				<button onClick={() => setReveal(true)}>Reveal Answer</button>
+				<button
+					onClick={() => {
+						revealSound.current.currentTime = 0;
+						revealSound.current.play();
+
+						setReveal(true);
+					}}
+				>
+					Reveal Answer
+				</button>
 			) : (
 				<>
 					<div className="a">{q.answer}</div>
@@ -319,6 +355,9 @@ export default function App() {
 					{winner === "No one got it" ? (
 						<button
 							onClick={() => {
+								failSound.current.currentTime = 0;
+								failSound.current.play();
+
 								setReveal(false);
 								setWinner("No one got it");
 								setI((v) => v + 1);
@@ -330,6 +369,9 @@ export default function App() {
 					) : (
 						<button
 							onClick={() => {
+								coinSound.current.currentTime = 0;
+								coinSound.current.play();
+
 								setScores((v) => ({
 									...v,
 									[winner]: v[winner] + 1,
