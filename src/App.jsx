@@ -131,13 +131,17 @@ export default function App() {
 		const highestScore = Math.max(...Object.values(scores));
 		const nobodyScored = highestScore === 0;
 
-		const winnerName = Object.entries(scores).reduce((a, b) =>
-			b[1] > a[1] ? b : a,
-		)[0];
+		const tiedPlayers = Object.entries(scores)
+			.filter(([_, score]) => score === highestScore)
+			.map(([name]) => name);
+
+		const isTie = !nobodyScored && tiedPlayers.length > 1;
+
+		const winnerName = tiedPlayers[0];
 
 		const losers = nobodyScored
 			? players
-			: players.filter((p) => p !== winnerName);
+			: players.filter((p) => !tiedPlayers.includes(p));
 		return (
 			<div className="screen">
 				<div style={{ marginTop: "40px" }}>
@@ -151,6 +155,8 @@ export default function App() {
 					>
 						{nobodyScored ? (
 							"Better luck next game!"
+						) : isTie ? (
+							"🏆 IT'S A TIE! 🏆"
 						) : (
 							<>
 								And the winner is {winnerName} with{" "}
@@ -188,48 +194,55 @@ export default function App() {
 							textShadow: "3px 3px 0 rgba(0,0,0,0.5)",
 						}}
 					>
-						{nobodyScored ? "Nobody got a single point 😭" : "Wow, so smart!"}
+						{nobodyScored
+							? "Nobody got a single point 😭"
+							: isTie
+								? tiedPlayers.join(" • ")
+								: "Wow, so smart!"}{" "}
 					</div>
-					<div
-						style={{
-							marginBottom: "30px",
-							padding: "20px",
-							background: "#32005f",
-							borderRadius: "10px",
-						}}
-					>
-						<h2
-							style={{
-								fontSize: "28px",
-								marginBottom: "15px",
-								color: "#FF1493",
-								textShadow: "2px 2px 0 rgba(0,0,0,0.5)",
-							}}
-						>
-							{losers.length === 1 ? "LOSER" : "LOSERS"}
-						</h2>
+					{losers.length > 0 && (
 						<div
 							style={{
-								fontSize: "24px",
-								color: "#FF6B6B",
-								fontFamily: "'Fredoka One',sans-serif",
+								marginBottom: "30px",
+								padding: "20px",
+								background: "#32005f",
+								borderRadius: "10px",
 							}}
 						>
-							{losers.map((loser) => (
-								<div
-									key={loser}
-									style={{
-										marginBottom: "10px",
-										padding: "10px",
-										background: "rgba(0,0,0,0.3)",
-										borderRadius: "5px",
-									}}
-								>
-									{loser} ({scores[loser]})
-								</div>
-							))}
+							<h2
+								style={{
+									fontSize: "28px",
+									marginBottom: "15px",
+									color: "#FF1493",
+									textShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+								}}
+							>
+								{losers.length === 1 ? "LOSER" : "LOSERS"}
+							</h2>
+
+							<div
+								style={{
+									fontSize: "24px",
+									color: "#FF6B6B",
+									fontFamily: "'Fredoka One',sans-serif",
+								}}
+							>
+								{losers.map((loser) => (
+									<div
+										key={loser}
+										style={{
+											marginBottom: "10px",
+											padding: "10px",
+											background: "rgba(0,0,0,0.3)",
+											borderRadius: "5px",
+										}}
+									>
+										{loser} ({scores[loser]})
+									</div>
+								))}
+							</div>
 						</div>
-					</div>
+					)}
 					<button
 						onClick={() => {
 							setStarted(false);
