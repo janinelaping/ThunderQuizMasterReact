@@ -3,9 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "homepage": "https://janinelaping.github.io/ThunderQuizMasterReact",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --base=/ThunderQuizMasterReact/",
+    "build": "vite build --base=/ThunderQuizMasterReact/",
     "preview": "vite preview",
     "start": "vite preview"
   },
