@@ -184,7 +184,7 @@ export default function App() {
 				<div style={{ marginTop: "40px" }}>
 					<h1
 						style={{
-							fontSize: "48px",
+							fontSize: "38px",
 							marginBottom: "20px",
 							color: "#FFD700",
 							textShadow: "4px 4px 0 rgba(0,0,0,0.5)",
