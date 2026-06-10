@@ -1,7 +1,21 @@
 import React from "react";
 import { useState, useRef, useEffect } from "react";
 import questions from "./data/questions";
-const pool = ["Janine", "Dennis", "Mandy", "Adrian"];
+const pool = [];
+const categoryIcons = {
+	Philippines: "🇵🇭",
+	Disney: "👑",
+	"Movies & TV": "🎬",
+	"Food & Drinks": "🍔",
+	Science: "🧪",
+	Geography: "🌎",
+	History: "📚",
+	Riddles: "🧩",
+	Sports: "⚽",
+	Music: "🎵",
+	"Video Games": "🎮",
+	"General Knowledge": "💡",
+};
 const getRandomIndex = () => Math.floor(Math.random() * questions.length);
 export default function App() {
 	const coinSound = useRef(new Audio(`${import.meta.env.BASE_URL}coin.mp3`));
@@ -19,18 +33,15 @@ export default function App() {
 	const [scores, setScores] = useState({});
 	const [i, setI] = useState(getRandomIndex());
 	const [questionNumber, setQuestionNumber] = useState(1);
+	const [usedQuestions, setUsedQuestions] = useState([]);
 	const [reveal, setReveal] = useState(false);
 	const [winner, setWinner] = useState("No one got it");
 	const [customPlayers, setCustomPlayers] = useState([]);
 	const [newPlayerName, setNewPlayerName] = useState("");
-	const [removedDefaults, setRemovedDefaults] = useState([]);
 	const [gameEnded, setGameEnded] = useState(false);
 	const toggle = (p) =>
 		setPlayers((x) => (x.includes(p) ? x.filter((a) => a !== p) : [...x, p]));
-	const allPlayers = [
-		...pool.filter((p) => !removedDefaults.includes(p)),
-		...customPlayers,
-	];
+	const allPlayers = customPlayers;
 	const addPlayer = () => {
 		if (newPlayerName.trim() && !allPlayers.includes(newPlayerName.trim())) {
 			const newName = newPlayerName.trim();
@@ -40,13 +51,19 @@ export default function App() {
 		}
 	};
 	const removePlayer = (p) => {
-		if (pool.includes(p)) {
-			setRemovedDefaults((x) => [...x, p]);
-			setPlayers((x) => x.filter((a) => a !== p));
-		} else {
-			setCustomPlayers((x) => x.filter((a) => a !== p));
-			setPlayers((x) => x.filter((a) => a !== p));
+		setCustomPlayers((x) => x.filter((a) => a !== p));
+		setPlayers((x) => x.filter((a) => a !== p));
+	};
+	const getNextQuestionIndex = () => {
+		const available = questions
+			.map((_, index) => index)
+			.filter((index) => !usedQuestions.includes(index));
+
+		if (available.length === 0) {
+			return null;
 		}
+
+		return available[Math.floor(Math.random() * available.length)];
 	};
 	const start = () => {
 		const s = {};
@@ -55,13 +72,27 @@ export default function App() {
 		bgMusic.current.currentTime = 0;
 		bgMusic.current.play();
 
+		const firstQuestion = Math.floor(Math.random() * questions.length);
+
+		setUsedQuestions([firstQuestion]);
+		setI(firstQuestion);
+
 		setScores(s);
 		setStarted(true);
 	};
 	const nextQuestion = () => {
+		const nextIndex = getNextQuestionIndex();
+
+		if (nextIndex === null) {
+			setGameEnded(true);
+			return;
+		}
+
+		setUsedQuestions((prev) => [...prev, nextIndex]);
+
 		setReveal(false);
 		setWinner("No one got it");
-		setI((v) => v + 1);
+		setI(nextIndex);
 		setQuestionNumber((v) => v + 1);
 	};
 
@@ -100,7 +131,7 @@ export default function App() {
 						textShadow: "2px 2px 0 rgba(0,0,0,0.5)",
 					}}
 				>
-					Select muna ng players
+					Enter Player Names
 				</div>
 				<div
 					style={{
@@ -112,8 +143,7 @@ export default function App() {
 						margin: "0 auto 20px",
 					}}
 				>
-					💡 Click player name to select • Click × to remove • Enter name below
-					to add
+					💡 Add all players first, then click Start Game
 				</div>
 				<div className="player-setup">
 					{allPlayers.map((p) => (
@@ -160,7 +190,9 @@ export default function App() {
 						Add Player
 					</button>
 				</div>
-				<button onClick={start}>Start Game</button>
+				<button onClick={start} disabled={players.length === 0}>
+					Start Game
+				</button>
 			</div>
 		);
 
@@ -292,7 +324,7 @@ export default function App() {
 							setReveal(false);
 							setWinner("No one got it");
 							setGameEnded(false);
-							setQuestionNumber(1);
+							setUsedQuestions([]);
 						}}
 						style={{
 							fontSize: "24px",
@@ -328,6 +360,17 @@ export default function App() {
 				))}
 			</div>
 			<h2>QUESTION {questionNumber}</h2>
+
+			<div
+				style={{
+					fontSize: "28px",
+					fontWeight: "bold",
+					marginBottom: "20px",
+					color: "#FFD700",
+				}}
+			>
+				{categoryIcons[q.category] || "💡"} {q.category}
+			</div>
 			<div className="q">{q.question}</div>
 			{!reveal ? (
 				<button
@@ -372,10 +415,7 @@ export default function App() {
 								failSound.current.currentTime = 0;
 								failSound.current.play();
 
-								setReveal(false);
-								setWinner("No one got it");
-								setI((v) => v + 1);
-								setQuestionNumber((v) => v + 1);
+								nextQuestion();
 							}}
 						>
 							Next Question
@@ -391,10 +431,7 @@ export default function App() {
 									[winner]: v[winner] + 1,
 								}));
 
-								setReveal(false);
-								setWinner("No one got it");
-								setI((v) => v + 1);
-								setQuestionNumber((v) => v + 1);
+								nextQuestion();
 							}}
 						>
 							Award Point
