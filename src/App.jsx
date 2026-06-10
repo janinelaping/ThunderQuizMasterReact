@@ -12,6 +12,7 @@ export default function App() {
 	const victorySound = useRef(
 		new Audio(`${import.meta.env.BASE_URL}victory.mp3`),
 	);
+	const bgMusic = useRef(new Audio(`${import.meta.env.BASE_URL}bg_music.mp3`));
 
 	const [started, setStarted] = useState(false);
 	const [players, setPlayers] = useState([]);
@@ -50,6 +51,10 @@ export default function App() {
 	const start = () => {
 		const s = {};
 		players.forEach((p) => (s[p] = 0));
+
+		bgMusic.current.currentTime = 0;
+		bgMusic.current.play();
+
 		setScores(s);
 		setStarted(true);
 	};
@@ -76,7 +81,12 @@ export default function App() {
 			victorySound.current.play();
 		}
 	}, [gameEnded]);
-	
+
+	useEffect(() => {
+		bgMusic.current.loop = true;
+		bgMusic.current.volume = 0.3;
+	}, []);
+
 	if (!started)
 		return (
 			<div className="screen">
@@ -272,6 +282,9 @@ export default function App() {
 					)}
 					<button
 						onClick={() => {
+							bgMusic.current.pause();
+							bgMusic.current.currentTime = 0;
+
 							setStarted(false);
 							setPlayers([]);
 							setScores({});
@@ -301,6 +314,7 @@ export default function App() {
 			<button
 				style={{ position: "absolute", top: "10px", right: "10px" }}
 				onClick={() => {
+					bgMusic.current.pause();
 					setGameEnded(true);
 				}}
 			>
